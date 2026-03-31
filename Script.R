@@ -1,0 +1,202 @@
+#LIBRERÍAS
+library(readr)
+library(dplyr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+
+# CARGA DE DATOS 
+# Cargamos la base de datos y visualizamos su estructura inicial
+datos <- read_csv("C:/Users/joelp/Documents/GitHub/ADM2-Act1/titanic.csv")
+View(datos)
+
+# 1.ANÁLISIS EXPLORATORIO ----
+
+# Estructura del dataset
+str(datos)
+
+# Resumen estadístico general
+summary(datos)
+
+
+# -------------------------
+# VALORES NULOS
+# -------------------------
+
+colSums(is.na(datos))
+
+# Porcentaje de nulos
+round(colSums(is.na(datos)) / nrow(datos) * 100, 2)
+
+# -------------------------
+# VARIABLES CATEGÓRICAS
+# -------------------------
+
+# Supervivencia
+table(datos$Survived)
+prop.table(table(datos$Survived))
+
+# Género
+table(datos$Sex)
+prop.table(table(datos$Sex))
+
+# Clase
+table(datos$Pclass)
+prop.table(table(datos$Pclass))
+
+# Puerto de embarque
+table(datos$Embarked)
+prop.table(table(datos$Embarked))
+
+# -------------------------
+# VARIABLES NUMÉRICAS
+# -------------------------
+
+# Edad
+summary(datos$Age)
+
+# Tarifa
+summary(datos$Fare)
+
+# Familiares
+summary(datos$SibSp)
+summary(datos$Parch)
+
+# -------------------------
+# ANÁLISIS CRUZADO
+# -------------------------
+
+# Supervivencia por género
+table(datos$Survived, datos$Sex)
+prop.table(table(datos$Survived, datos$Sex), margin = 2)
+
+# Supervivencia por clase
+table(datos$Survived, datos$Pclass)
+prop.table(table(datos$Survived, datos$Pclass), margin = 2)
+
+# Supervivencia por puerto
+table(datos$Survived, datos$Embarked)
+prop.table(table(datos$Survived, datos$Embarked), margin = 2)
+
+# -------------------------
+# VISUALIZACIONES
+# -------------------------
+
+# Histograma de edades
+hist(datos$Age, main = "Distribución de Edad", xlab = "Edad")
+
+# Histograma de tarifas
+hist(datos$Fare, main = "Distribución de Tarifas", xlab = "Fare")
+
+# Boxplot edad vs supervivencia
+boxplot(Age ~ Survived, data = datos,
+        main = "Edad vs Supervivencia",
+        xlab = "Sobrevivió (0=No, 1=Sí)",
+        ylab = "Edad")
+
+# Boxplot tarifa vs supervivencia
+boxplot(Fare ~ Survived, data = datos,
+        main = "Tarifa vs Supervivencia",
+        xlab = "Sobrevivió (0=No, 1=Sí)",
+        ylab = "Fare")
+
+
+#2. MODELOS DE CLASIFICACIÓN 
+# 2.1 LIMPIEZA Y PREPROCESAMIENTO DE LOS DATOS
+
+# ARGUMENTACIÓN DEL PREPROCESAMIENTO:
+# Excluimos variables sin capacidad predictiva, ya que son identificadores (PassengerId, Name, Ticket).
+# Eliminamos la variable Cabin por su elevada proporción de nulos, evitando sesgos en el análisis.
+# Para la variable Age, reemplazamos los valores nulos por la media de la edad redondeada.
+# Tranformamos en binaria la variable género y convertimos a factor la clase y el puerto.
+
+datos_limpios <- datos %>%
+  # Paso 1: Reemplazamos la variable Age por la media.
+  mutate(Age = ifelse(is.na(Age), mean(Age, na.rm = TRUE), Age),
+         Age = round(Age)) %>%
+  
+  # Paso 2: Eliminación de identificadores y variables con exceso de nulos.
+  select(-Cabin, -PassengerId, -Name, -Ticket) %>%
+  
+  # Paso 3: Eliminación de las filas residuales con nulos (Embarked)
+  na.omit() %>%
+  
+  # Paso 4: Transformación de variables.
+  mutate(
+    Sex_numerico = ifelse(Sex == "male", 1, 0),             
+    Embarked_factor = as.factor(Embarked),                  
+    Pclass_factor = as.factor(Pclass)                     
+  )
+
+# 2.2 PARTICIÓN DE LOS DATOS EN ENTRENAMIENTO Y TESTEO
+
+# Seleccionamos exclusivamente las columnas predictoras definitivas.
+datos_regresion <- datos_limpios %>% 
+  select(Survived, Pclass_factor, Sex_numerico, Age, SibSp, Parch, Fare, Embarked_factor)
+#Para la creación de este modelo predictivo, hemos seleccionado variables que representan las características más relevantes, tales como el género, la edad, la clase del billete, el número de familiares a bordo, la tarifa pagada y el puerto de embarque. 
+#La elección de estos factores nos permite comprobar con datos reales si normas históricas como "las mujeres y los niños primero" o la diferencia de clases sociales tuvieron un impacto directo y cuantificable en las posibilidades de sobrevivir.
+#No se han tenido en cuenta el resto de variables debido a que eran identificadores, los cuáles  no tienen capacidad predictiva.
+
+# Partición de la muestra (80% Entrenamiento, 20% Testeo).
+set.seed(123)
+indice <- sample(1:nrow(datos_regresion), size = round(0.8 * nrow(datos_regresion))) 
+
+train <- datos_regresion[indice, ]  
+test  <- datos_regresion[-indice, ] 
+
+# 2.3. MODELADO ESTADÍSTICO Y EXTRACCIÓN DE PATRONES
+
+# A) REGRESIÓN LOGÍSTICA
+
+modelo <- glm(Survived ~ Pclass_factor + Sex_numerico + Age + SibSp + Parch + Fare + Embarked_factor, 
+              data = train, family = "binomial")
+
+summary(modelo)
+
+# B) ÁRBOL DE DECISIÓN
+
+modeloarbol <- rpart(Survived ~ Pclass_factor + Sex_numerico + Age + SibSp + Parch + Fare + Embarked_factor, 
+                     data = train, method = "class")
+
+# Visualización gráfica 
+rpart.plot(modeloarbol)
+#A la hora de interpretar el árbol de decisión, realizamos la lectura de arriba hacia abajo. En los distintos nodos, el color azul indica que predominan los casos con valor 0 (no sobrevivieron), mientras que el color verde señala que predominan los casos con valor 1 (supervivientes). 
+#Además, el valor decimal muestra la probabilidad exacta de sobrevivir, y el porcentaje inferior nos indica qué porción de la muestra total se encuentra en ese grupo. 
+#Partiendo de esta base, el nodo raíz, situado en la parte superior y de color azul claro, recoge el 100% de la muestra. En él vemos que, de manera global, lo que más hay son 0 y la probabilidad general de sobrevivir es de un 37% (0.37).
+
+#El patrón principal que estructura el modelo es el género de los pasajeros.
+#La primera división del árbol analiza si el pasajero es hombre. 
+#Si la respuesta es afirmativa, pasamos a un nodo azul que agrupa al 66% de los casos totales; en este grupo predominan ampliamente los 0 y la probabilidad de sobrevivir cae a solo un 19% (0.19).
+#Por el contrario, si la respuesta es negativa —es decir, se trata de mujeres— pasamos a un nodo verde que recoge al 34% de los datos.
+#En este subgrupo la tendencia se invierte por completo: lo que más hay son 1 y la probabilidad de sobrevivir asciende de forma notable hasta el 73% (0.73).
+
+#Profundizando en el grupo de los hombres, el árbol realiza su siguiente división basándose en la edad, concretamente preguntando si tienen 7 años o más.
+#El nodo azul resultante de esta partición agrupa a los varones a partir de dicha edad, recogiendo al 63% de los datos de toda la muestra; en él, lo que más hay son 0 y su probabilidad de sobrevivir es muy baja, situándose en un 0.17. 
+#Sin embargo, si analizamos a los varones menores de 7 años, llegamos a un nodo verde que representa al 3% de los casos, donde predominan los 1 y la probabilidad de sobrevivir se eleva al 0.70. 
+#Este pequeño conjunto de niños experimenta una última partición dependiente del número de hermanos a bordo. 
+#Si viajan con dos o más hermanos, la probabilidad de sobrevivir se desploma a un 0.14 en un nodo azul. 
+#En cambio, si viajan con un hermano o son hijos únicos, alcanzan una probabilidad de 1.00 en un nodo verde oscuro, lo que significa que en este grupo concreto del 2% de la muestra, todos lograron sobrevivir.
+
+#Por otro lado, al analizar la rama correspondiente a las mujeres, el árbol utiliza la clase del billete como factor decisivo. 
+#El nodo verde oscuro derivado de esta división recoge a las mujeres que no viajaban en tercera clase (es decir, las de primera y segunda clase).
+#Este grupo contiene al 18% de los casos totales, predominan los 1 y su probabilidad de supervivencia es altísima, alcanzando el 94% (0.94).
+#El nodo de la izquierda que agrupa a las pasajeras que sí viajaban en tercera clase representa el 16% de los datos y muestra una probabilidad de sobrevivir del 0.50.
+
+#Debido a esta falta de claridad en las mujeres de tercera clase, el modelo realiza divisiones adicionales utilizando el precio del billete y el puerto de embarque para poder clasificarlas. 
+#El primer corte para estas pasajeras aísla a aquellas que pagaron tarifas iguales o superiores a 25.
+#Este nodo azul representa el 3% de la muestra general y en él predomina el 0, desplomándose la probabilidad de supervivencia a un escaso 6% (0.06).
+#El resto de las pasajeras de tercera clase se distribuyen en nodos finales más pequeños, tanto verdes como azules, cuyas probabilidades de sobrevivir están entre el 0.30 y el 0.83 dependiendo de las combinaciones específicas de su tarifa y su puerto de origen.
+
+
+
+# 3. VALIDACIÓN Y RENDIMIENTO DE LOS MODELOS 
+
+
+# Evaluación Logit
+prob_pred_logit <- predict(modelo, newdata = test, type = "response")
+clase_pred_logit <- ifelse(prob_pred_logit > 0.5, 1, 0)
+pred_clase_factor_logit <- factor(clase_pred_logit, levels = c(0, 1)) 
+
+cat("\n--- MATRIZ DE CONFUSIÓN: REGRESIÓN LOGÍSTICA ---\n")
+# CORRECCIÓN 2: Convertimos test$Survived a factor directamente aquí dentro
+confusionMatrix(pred_clase_factor_logit, factor(test$Survived, levels = c(0, 1)), positive = "1")
