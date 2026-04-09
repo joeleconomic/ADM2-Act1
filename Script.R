@@ -7,7 +7,7 @@ library(rpart.plot)
 
 # CARGA DE DATOS 
 # Cargamos la base de datos y visualizamos su estructura inicial
-datos <- read_csv("C:/Users/joelp/Documents/GitHub/ADM2-Act1/titanic.csv")
+datos <- read_csv("titanic.csv")
 View(datos)
 
 # 1.ANÁLISIS EXPLORATORIO ----
