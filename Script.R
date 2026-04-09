@@ -164,33 +164,6 @@ modeloarbol <- rpart(Survived ~ Pclass_factor + Sex_numerico + Age + SibSp + Par
 
 # Visualización gráfica 
 rpart.plot(modeloarbol)
-#A la hora de interpretar el árbol de decisión, realizamos la lectura de arriba hacia abajo. En los distintos nodos, el color azul indica que predominan los casos con valor 0 (no sobrevivieron), mientras que el color verde señala que predominan los casos con valor 1 (supervivientes). 
-#Además, el valor decimal muestra la probabilidad exacta de sobrevivir, y el porcentaje inferior nos indica qué porción de la muestra total se encuentra en ese grupo. 
-#Partiendo de esta base, el nodo raíz, situado en la parte superior y de color azul claro, recoge el 100% de la muestra. En él vemos que, de manera global, lo que más hay son 0 y la probabilidad general de sobrevivir es de un 37% (0.37).
-
-#El patrón principal que estructura el modelo es el género de los pasajeros.
-#La primera división del árbol analiza si el pasajero es hombre. 
-#Si la respuesta es afirmativa, pasamos a un nodo azul que agrupa al 66% de los casos totales; en este grupo predominan ampliamente los 0 y la probabilidad de sobrevivir cae a solo un 19% (0.19).
-#Por el contrario, si la respuesta es negativa —es decir, se trata de mujeres— pasamos a un nodo verde que recoge al 34% de los datos.
-#En este subgrupo la tendencia se invierte por completo: lo que más hay son 1 y la probabilidad de sobrevivir asciende de forma notable hasta el 73% (0.73).
-
-#Profundizando en el grupo de los hombres, el árbol realiza su siguiente división basándose en la edad, concretamente preguntando si tienen 7 años o más.
-#El nodo azul resultante de esta partición agrupa a los varones a partir de dicha edad, recogiendo al 63% de los datos de toda la muestra; en él, lo que más hay son 0 y su probabilidad de sobrevivir es muy baja, situándose en un 0.17. 
-#Sin embargo, si analizamos a los varones menores de 7 años, llegamos a un nodo verde que representa al 3% de los casos, donde predominan los 1 y la probabilidad de sobrevivir se eleva al 0.70. 
-#Este pequeño conjunto de niños experimenta una última partición dependiente del número de hermanos a bordo. 
-#Si viajan con dos o más hermanos, la probabilidad de sobrevivir se desploma a un 0.14 en un nodo azul. 
-#En cambio, si viajan con un hermano o son hijos únicos, alcanzan una probabilidad de 1.00 en un nodo verde oscuro, lo que significa que en este grupo concreto del 2% de la muestra, todos lograron sobrevivir.
-
-#Por otro lado, al analizar la rama correspondiente a las mujeres, el árbol utiliza la clase del billete como factor decisivo. 
-#El nodo verde oscuro derivado de esta división recoge a las mujeres que no viajaban en tercera clase (es decir, las de primera y segunda clase).
-#Este grupo contiene al 18% de los casos totales, predominan los 1 y su probabilidad de supervivencia es altísima, alcanzando el 94% (0.94).
-#El nodo de la izquierda que agrupa a las pasajeras que sí viajaban en tercera clase representa el 16% de los datos y muestra una probabilidad de sobrevivir del 0.50.
-
-#Debido a esta falta de claridad en las mujeres de tercera clase, el modelo realiza divisiones adicionales utilizando el precio del billete y el puerto de embarque para poder clasificarlas. 
-#El primer corte para estas pasajeras aísla a aquellas que pagaron tarifas iguales o superiores a 25.
-#Este nodo azul representa el 3% de la muestra general y en él predomina el 0, desplomándose la probabilidad de supervivencia a un escaso 6% (0.06).
-#El resto de las pasajeras de tercera clase se distribuyen en nodos finales más pequeños, tanto verdes como azules, cuyas probabilidades de sobrevivir están entre el 0.30 y el 0.83 dependiendo de las combinaciones específicas de su tarifa y su puerto de origen.
-
 
 # 3. VALIDACIÓN Y RENDIMIENTO DE LOS MODELOS 
 
