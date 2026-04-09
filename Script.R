@@ -173,5 +173,19 @@ clase_pred_logit <- ifelse(prob_pred_logit > 0.5, 1, 0)
 pred_clase_factor_logit <- factor(clase_pred_logit, levels = c(0, 1)) 
 
 cat("\n--- MATRIZ DE CONFUSIÓN: REGRESIÓN LOGÍSTICA ---\n")
-# CORRECCIÓN 2: Convertimos test$Survived a factor directamente aquí dentro
+# Convertimos test$Survived a factor directamente aquí dentro
 confusionMatrix(pred_clase_factor_logit, factor(test$Survived, levels = c(0, 1)), positive = "1")
+
+# Evaluación Árbol
+pred_arbol <- predict(modeloarbol, newdata = test, type = "class")
+pred_arbol_factor <- factor(pred_arbol, levels = c(0, 1))
+
+cat("\n--- MATRIZ DE CONFUSIÓN: ÁRBOL DE DECISIÓN ---\n")
+# Hacemos lo mismo para evaluar el árbol
+confusionMatrix(pred_arbol_factor, factor(test$Survived, levels = c(0, 1)), positive = "1")
+
+# Extracción de la importancia de las variables para el modelo predictivo
+modeloarbol$variable.importance
+
+
+
