@@ -24,9 +24,11 @@ summary(datos)
 # -------------------------
 
 colSums(is.na(datos))
+# El dataset presenta valores nulos en las variables Age, Cabin y Embarked
 
 # Porcentaje de nulos
 round(colSums(is.na(datos)) / nrow(datos) * 100, 2)
+# Destacan Cabin con un 77.10% de nulos y Age con un 19.87%. Embarked presenta un bajo porcentaje (0.22%)
 
 # -------------------------
 # VARIABLES CATEGÓRICAS
@@ -111,7 +113,7 @@ boxplot(Fare ~ Survived, data = datos,
 # Tranformamos en binaria la variable género y convertimos a factor la clase y el puerto.
 
 datos_limpios <- datos %>%
-  # Paso 1: Reemplazamos la variable Age por la media.
+  # Paso 1: Reemplazamos los nulos de la variable Age por la media.
   mutate(Age = ifelse(is.na(Age), mean(Age, na.rm = TRUE), Age),
          Age = round(Age)) %>%
   
@@ -127,6 +129,8 @@ datos_limpios <- datos %>%
     Embarked_factor = as.factor(Embarked),                  
     Pclass_factor = as.factor(Pclass)                     
   )
+
+View(datos_limpios)
 
 # 2.2 PARTICIÓN DE LOS DATOS EN ENTRENAMIENTO Y TESTEO
 
