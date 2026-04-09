@@ -137,7 +137,7 @@ View(datos_limpios)
 # Seleccionamos exclusivamente las columnas predictoras definitivas.
 datos_regresion <- datos_limpios %>% 
   select(Survived, Pclass_factor, Sex_numerico, Age, SibSp, Parch, Fare, Embarked_factor)
-#Para la creación de este modelo predictivo, hemos seleccionado variables que representan las características más relevantes, tales como el género, la edad, la clase del billete, el número de familiares a bordo, la tarifa pagada y el puerto de embarque. 
+#Para la creación de estos modelos predictivos, hemos seleccionado variables que representan las características más relevantes, tales como el género, la edad, la clase del billete, el número de familiares a bordo, la tarifa pagada y el puerto de embarque. 
 #La elección de estos factores nos permite comprobar con datos reales si normas históricas como "las mujeres y los niños primero" o la diferencia de clases sociales tuvieron un impacto directo y cuantificable en las posibilidades de sobrevivir.
 #No se han tenido en cuenta el resto de variables debido a que eran identificadores, los cuáles  no tienen capacidad predictiva.
 
@@ -192,9 +192,7 @@ rpart.plot(modeloarbol)
 #El resto de las pasajeras de tercera clase se distribuyen en nodos finales más pequeños, tanto verdes como azules, cuyas probabilidades de sobrevivir están entre el 0.30 y el 0.83 dependiendo de las combinaciones específicas de su tarifa y su puerto de origen.
 
 
-
 # 3. VALIDACIÓN Y RENDIMIENTO DE LOS MODELOS 
-
 
 # Evaluación Logit
 prob_pred_logit <- predict(modelo, newdata = test, type = "response")
